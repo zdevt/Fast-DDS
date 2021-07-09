@@ -654,7 +654,7 @@ DeliveryRetCode StatelessWriter::deliver_sample_nts(
                 {
                     for (std::unique_ptr<ReaderLocator>& it : matched_remote_readers_)
                     {
-                        group.change_transmitter(this, &*it);
+                        group.sender(this, &*it);
                         num_locators = it->locators_size();
 
                         if (group.add_data_frag(*cache_change, frag, is_inline_qos_expected_))
@@ -680,7 +680,7 @@ DeliveryRetCode StatelessWriter::deliver_sample_nts(
             {
                 for (std::unique_ptr<ReaderLocator>& it : matched_remote_readers_)
                 {
-                    group.change_transmitter(this, &*it);
+                    group.sender(this, &*it);
                     num_locators = it->locators_size();
 
                     if (group.add_data(*cache_change, is_inline_qos_expected_))
@@ -747,7 +747,7 @@ DeliveryRetCode StatelessWriter::deliver_sample_nts(
         ret_code = DeliveryRetCode::EXCEEDED_LIMIT;
     }
 
-    group.change_transmitter(this, &locator_selector);
+    group.sender(this, &locator_selector);
 
     if (DeliveryRetCode::DELIVERED == ret_code &&
             change_sequence_number > last_sequence_number_sent_)
