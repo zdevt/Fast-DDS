@@ -373,7 +373,7 @@ bool StatelessWriter::change_removed_by_history(
     const uint64_t sequence_number = change->sequenceNumber.to64long();
     if (sequence_number > last_sequence_number_sent_)
     {
-        unsent_changes_cond_.notify_one();
+        unsent_changes_cond_.notify_all();
     }
 
     return true;
@@ -382,6 +382,7 @@ bool StatelessWriter::change_removed_by_history(
 bool StatelessWriter::is_acked_by_all(
         const CacheChange_t* change) const
 {
+    std::lock_guard<RecursiveTimedMutex> guard(mp_mutex);
     return change->sequenceNumber.to64long() >= last_sequence_number_sent_;
 }
 
@@ -521,7 +522,6 @@ bool StatelessWriter::matched_reader_remove(
 {
     std::lock_guard<RecursiveTimedMutex> guard(mp_mutex);
 
-    //TODO Marcar para flushear
     if (locator_selector_.locator_selector.remove_entry(reader_guid))
     {
         std::unique_ptr<ReaderLocator> reader;
@@ -592,7 +592,6 @@ bool StatelessWriter::matched_reader_is_matched(
 void StatelessWriter::unsent_changes_reset()
 {
     std::lock_guard<RecursiveTimedMutex> guard(mp_mutex);
-    // TODO improve flowcontroller with iterators.
     std::for_each(mp_history->changesBegin(), mp_history->changesEnd(), [&](CacheChange_t* change)
             {
                 flow_controller_->add_new_sample(this, change,
@@ -600,12 +599,12 @@ void StatelessWriter::unsent_changes_reset()
             });
 }
 
-bool StatelessWriter::send(
+bool StatelessWriter::send_nts(
         CDRMessage_t* message,
         const LocatorSelectorSender& locator_selector,
         std::chrono::steady_clock::time_point& max_blocking_time_point) const
 {
-    if (!RTPSWriter::send(message, locator_selector, max_blocking_time_point))
+    if (!RTPSWriter::send_nts(message, locator_selector, max_blocking_time_point))
     {
         return false;
     }
@@ -633,11 +632,14 @@ DeliveryRetCode StatelessWriter::deliver_sample_nts(
     }
 
     // Send to interprocess readers the new sample.
-    for_matched_readers(matched_local_readers_, [&, cache_change](ReaderLocator& reader)
-            {
-                intraprocess_delivery(cache_change, reader);
-                return false;
-            });
+    if (0 == current_fragment_sent_)
+    {
+        for_matched_readers(matched_local_readers_, [&, cache_change](ReaderLocator& reader)
+                {
+                    intraprocess_delivery(cache_change, reader);
+                    return false;
+                });
+    }
 
     try
     {
@@ -753,7 +755,7 @@ DeliveryRetCode StatelessWriter::deliver_sample_nts(
     {
         // This update must be done before calling the callback.
         last_sequence_number_sent_ = change_sequence_number;
-        unsent_changes_cond_.notify_one();
+        unsent_changes_cond_.notify_all();
 
         if (nullptr != mp_listener)
         {
