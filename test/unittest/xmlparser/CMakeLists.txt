@@ -119,6 +119,8 @@ if(NOT ((MSVC OR MSVC_IDE) AND EPROSIMA_INSTALLER))
 
         add_executable(XMLProfileParserTests ${XMLPROFILEPARSER_SOURCE})
         target_compile_definitions(XMLProfileParserTests PRIVATE FASTRTPS_NO_LIB
+            BOOST_ASIO_STANDALONE
+            ASIO_STANDALONE
             $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<STREQUAL:"${CMAKE_BUILD_TYPE}","Debug">>:__DEBUG>
             $<$<BOOL:${INTERNAL_DEBUG}>:__INTERNALDEBUG> # Internal debug activated.
             )
@@ -204,6 +206,8 @@ if(NOT ((MSVC OR MSVC_IDE) AND EPROSIMA_INSTALLER))
 
         add_executable(XMLParserTests ${XMLPARSER_SOURCE})
         target_compile_definitions(XMLParserTests PRIVATE FASTRTPS_NO_LIB
+            BOOST_ASIO_STANDALONE
+            ASIO_STANDALONE
             $<$<AND:$<NOT:$<BOOL:${WIN32}>>,$<STREQUAL:"${CMAKE_BUILD_TYPE}","Debug">>:__DEBUG>
             $<$<BOOL:${INTERNAL_DEBUG}>:__INTERNALDEBUG> # Internal debug activated.
             )
@@ -315,7 +319,10 @@ if(NOT ((MSVC OR MSVC_IDE) AND EPROSIMA_INSTALLER))
         include_directories(${TINYXML2_INCLUDE_DIR})
 
         add_executable(XMLEndpointParserTests ${XMLENDPOINTPARSERTESTS_SOURCE})
-        target_compile_definitions(XMLEndpointParserTests PRIVATE FASTRTPS_NO_LIB)
+        target_compile_definitions(XMLEndpointParserTests PRIVATE FASTRTPS_NO_LIB
+            BOOST_ASIO_STANDALONE
+            ASIO_STANDALONE
+            )
         target_include_directories(XMLEndpointParserTests PRIVATE
             ${PROJECT_SOURCE_DIR}/test/mock/rtps/ReaderProxyData
             ${PROJECT_SOURCE_DIR}/test/mock/rtps/WriterProxyData
