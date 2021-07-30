@@ -95,13 +95,6 @@ check_compile_feature()
 check_endianness()
 
 ###############################################################################
-# Check MSVC architecture
-###############################################################################
-if(MSVC OR MSVC_IDE)
-    check_msvc_arch()
-endif()
-
-###############################################################################
 # Installation paths
 ###############################################################################
 set(BIN_INSTALL_DIR bin/ CACHE PATH "Installation directory for binaries")
